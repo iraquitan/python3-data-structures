@@ -72,7 +72,8 @@ class LinkedList(object):
             self.head = current.next_
         elif current:
             prev_.next_ = current.next_
-            current.next_ = None
+            del current
+            # current.next_ = None
         return
 
     def find(self, data):
@@ -104,27 +105,137 @@ class LinkedList(object):
         self.head = prev_
 
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-    lst = LinkedList()
+def create_list():
+    return LinkedList()
+
+
+def get_list_size():
     while True:
         try:
             n = int(input('How many elements in the list? '))
-            break
+            return n
         except ValueError:
             print('Number of elements to insert must be an integer.')
             continue
-    for i in range(n):
-        while True:
-            try:
-                data = int(input('Enter data to store in the list: '))
+
+
+def append_data(lst):
+    while True:
+        try:
+            data = int(input('Enter data to store in the list: '))
+            break
+        except ValueError:
+            print('Data to insert must be an integer.')
+            continue
+    lst.append(data)
+
+
+def prepend_data(lst):
+    while True:
+        try:
+            data = int(input('Enter data to store in the list: '))
+            break
+        except ValueError:
+            print('Data to insert must be an integer.')
+            continue
+    lst.prepend(data)
+
+
+def insert_data(lst):
+    while True:
+        try:
+            data = int(input('Enter data to store in the list: '))
+            index = int(input('Enter index to store data: '))
+            lst.insert(data, index)
+            break
+        except ValueError:
+            print("Could not convert data to an integer.")
+            continue
+        except IndexError:
+            print("Index out of bounds in the list.")
+            continue
+
+
+def delete_data(lst):
+    while True:
+        try:
+            data = int(input('Enter data to delete in the list: '))
+            break
+        except ValueError:
+            print('Data to insert must be an integer.')
+            continue
+    lst.delete(data)
+
+
+def find_data(lst):
+    while True:
+        try:
+            data = int(input('Enter data to find in the list: '))
+            break
+        except ValueError:
+            print('Data to insert must be an integer.')
+            continue
+    return lst.find(data)
+
+
+def options():
+    while True:
+        try:
+            opt = int(input("1: Create Linked-List\n2: Exit\n"))
+            if opt == 1:
+                return create_list()
                 break
-            except ValueError:
-                print('Data to insert must be an integer.')
-                continue
-        lst.prepend(data)
-        print(f'List -> {lst}')
+            elif opt == 2:
+                sys.exit()
+        except ValueError:
+            continue
+
+
+def list_options(lst):
+    while True:
+        try:
+            opt = int(input("1: Append\n2: Prepend\n3: Insert\n4: Find\n"
+                            "5: Delete\n6: Exit\n"))
+            if opt == 1:
+                append_data(lst)
+                print(f'List -> {lst}')
+                break
+            elif opt == 2:
+                prepend_data(lst)
+                print(f'List -> {lst}')
+                break
+            elif opt == 3:
+                insert_data(lst)
+                print(f'List -> {lst}')
+                break
+            elif opt == 4:
+                data_node = find_data(lst)
+                if data_node:
+                    print(f'{data_node} found!')
+                else:
+                    print('not found!')
+                break
+            elif opt == 5:
+                delete_data(lst)
+                print(f'List -> {lst}')
+                break
+            elif opt == 6:
+                sys.exit()
+        except ValueError:
+            continue
+
+
+def main(argv=None):
+    while True:
+        if argv is None:
+            argv = sys.argv
+        lst = options()
+        while lst:
+            list_options(lst)
+        # n = get_list_size()
+        # for i in range(n):
+        #     prepend_data(lst)
+        #     print(f'List -> {lst}')
 
 if __name__ == "__main__":
     main()
