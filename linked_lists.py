@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
+import cmd
 
 
 class Node(object):
@@ -11,7 +12,17 @@ class Node(object):
         self.next_ = next_
 
     def __repr__(self):
-        return repr(self.data)
+        return repr((self.data, id(self.next_)))
+
+
+class DNode(Node):
+    def __init__(self, data=None, next_=None, previous_=None):
+        """"""
+        super(DNode, self).__init__(data, next_)
+        self.previous_ = previous_
+
+    def __repr__(self):
+        return repr((id(self.previous_), self.data, id(self.next_)))
 
 
 class LinkedList(object):
@@ -27,40 +38,37 @@ class LinkedList(object):
         if self.head is not None:
             current = self.head
             while current:
-                nodes.append(repr(current.data))
+                # nodes.append(repr(current.data))
+                nodes.append(repr(current))
                 current = current.next_
         return '[{nodes}]'.format(nodes=', '.join(nodes))
 
     def prepend(self, data):
-        if self.head is None:
-            self.head = Node(data)
-            return
-        self.head = Node(data, next_=self.head)
+        """Special case of insert data with index equal to 0"""
+        self.insert(data, 0)
 
     def append(self, data):
+        """Special case of insert data with index equal to -1"""
+        self.insert(data, -1)
+
+    def insert(self, data, index=-1):
+        # If list is empty set head to new data node
         if self.head is None:
             self.head = Node(data)
             return
+        if index == 0:
+            self.head = Node(data, next_=self.head)
+            return
+        ix = 0
         current = self.head
         while current.next_:
+            if ix == index - 1:
+                break
+            ix += 1
             current = current.next_
-        current.next_ = Node(data)
-
-    def insert(self, data, index=-1):
-        if index == -1:
-            self.append(data)
-        elif index == 0:
-            self.prepend(data)
-        else:
-            ix = 0
-            current = self.head
-            while current.next_:
-                if ix == index - 1:
-                    current.next_ = Node(data, current.next_)
-                    return
-                ix += 1
-                current = current.next_
+        if index != -1:
             raise IndexError(f'"index" {index} out of bounds')
+        current.next_ = Node(data, current.next_)
 
     def delete(self, data):
         current = self.head
@@ -68,12 +76,11 @@ class LinkedList(object):
         while current and current.data != data:
             prev_ = current
             current = current.next_
-        if prev_ is None:
+        if prev_ is None and current is not None:
             self.head = current.next_
         elif current:
             prev_.next_ = current.next_
             del current
-            # current.next_ = None
         return
 
     def find(self, data):
@@ -105,137 +112,188 @@ class LinkedList(object):
         self.head = prev_
 
 
-def create_list():
-    return LinkedList()
+class DoubleLinkedList(LinkedList):
+    def __init__(self, data=None):
+        """"""
+        super(DoubleLinkedList, self).__init__(data)
+        if data is not None:
+            self.head = DNode(data)
+        else:
+            self.head = None
 
-
-def get_list_size():
-    while True:
-        try:
-            n = int(input('How many elements in the list? '))
-            return n
-        except ValueError:
-            print('Number of elements to insert must be an integer.')
-            continue
-
-
-def append_data(lst):
-    while True:
-        try:
-            data = int(input('Enter data to store in the list: '))
-            break
-        except ValueError:
-            print('Data to insert must be an integer.')
-            continue
-    lst.append(data)
-
-
-def prepend_data(lst):
-    while True:
-        try:
-            data = int(input('Enter data to store in the list: '))
-            break
-        except ValueError:
-            print('Data to insert must be an integer.')
-            continue
-    lst.prepend(data)
-
-
-def insert_data(lst):
-    while True:
-        try:
-            data = int(input('Enter data to store in the list: '))
-            index = int(input('Enter index to store data: '))
-            lst.insert(data, index)
-            break
-        except ValueError:
-            print("Could not convert data to an integer.")
-            continue
-        except IndexError:
-            print("Index out of bounds in the list.")
-            continue
-
-
-def delete_data(lst):
-    while True:
-        try:
-            data = int(input('Enter data to delete in the list: '))
-            break
-        except ValueError:
-            print('Data to insert must be an integer.')
-            continue
-    lst.delete(data)
-
-
-def find_data(lst):
-    while True:
-        try:
-            data = int(input('Enter data to find in the list: '))
-            break
-        except ValueError:
-            print('Data to insert must be an integer.')
-            continue
-    return lst.find(data)
-
-
-def options():
-    while True:
-        try:
-            opt = int(input("1: Create Linked-List\n2: Exit\n"))
-            if opt == 1:
-                return create_list()
+    def insert(self, data, index=-1):
+        if self.head is None:
+            self.head = DNode(data)
+            return
+        if index == 0:
+            next_ = self.head
+            self.head = DNode(data, next_=self.head)
+            next_.previous_ = self.head
+            return
+        ix = 0
+        current = self.head
+        while current.next_:
+            if ix == index - 1:
                 break
-            elif opt == 2:
-                sys.exit()
-        except ValueError:
-            continue
+            ix += 1
+            current = current.next_
+        if index != -1:
+            raise IndexError(f'"index" {index} out of bounds')
+        next_ = current.next_
+        current.next_ = DNode(data, next_=next_, previous_=current)
+        if next_:
+            next_.previous_ = current.next_
+
+    def delete(self, data):
+        current = self.head
+        prev_ = None
+        while current and current.data != data:
+            prev_ = current
+            current = current.next_
+        if prev_ is None and current is not None:
+            self.head = current.next_
+            self.head.previous_ = None
+        elif current:
+            next_ = current.next_
+            prev_.next_ = next_
+            if next_:
+                next_.previous_ = prev_
+            del current
+        return
+
+    def reverse(self):
+        current = self.head
+        prev_ = None
+        while current:
+            next_ = current.next_
+            prev_ = current
+            current.next_, current.previous_ = current.previous_, current.next_
+            current = next_
+        self.head = prev_
 
 
-def list_options(lst):
-    while True:
-        try:
-            opt = int(input("1: Append\n2: Prepend\n3: Insert\n4: Find\n"
-                            "5: Delete\n6: Exit\n"))
-            if opt == 1:
-                append_data(lst)
-                print(f'List -> {lst}')
-                break
-            elif opt == 2:
-                prepend_data(lst)
-                print(f'List -> {lst}')
-                break
-            elif opt == 3:
-                insert_data(lst)
-                print(f'List -> {lst}')
-                break
-            elif opt == 4:
-                data_node = find_data(lst)
-                if data_node:
-                    print(f'{data_node} found!')
-                else:
-                    print('not found!')
-                break
-            elif opt == 5:
-                delete_data(lst)
-                print(f'List -> {lst}')
-                break
-            elif opt == 6:
-                sys.exit()
-        except ValueError:
-            continue
+class LinkedListCMD(cmd.Cmd):
+    prompt = '\n(linked-list)> '
+
+    def __init__(self, ):
+        """"""
+        super(LinkedListCMD, self).__init__()
+        self.list = None
+
+    # The default() method is called when none of the other do_*() command
+    # methods match.
+    def default(self, arg):
+        self.stdout.write('I do not understand that command. '
+                          'Type "help" for a list of commands.')
+
+    def emptyline(self):
+        pass
+
+    def do_create_list(self, line):
+        """Creates a Linked-List"""
+        opt = None
+        while True and opt not in (1, 2):
+            try:
+                opt = int(input("[1] Single or [2] Double Linked-List? "))
+            except ValueError:
+                continue
+        if opt == 1:
+            self.list = LinkedList()
+        else:
+            self.list = DoubleLinkedList()
+
+    def do_delete_list(self, line):
+        """Deletes the current Linked-List"""
+        self.list = None
+
+    def do_view_list(self, line):
+        """View the current Linked-List if it exists"""
+        if self.list:
+            print(f'List -> {self.list}')
+        else:
+            print('No Linked-List created. Use "create_list" to create '
+                  'one.')
+
+    def do_append(self, line):
+        """Append value(s) to Linked-List"""
+        if self.list:
+            for a in parse(line):
+                self.list.append(a)
+
+    def do_prepend(self, line):
+        """Prepend value(s) to Linked-List"""
+        if self.list:
+            for a in parse(line):
+                self.list.prepend(a)
+
+    def do_insert(self, line):
+        """Insert value(s) to Linked-List"""
+        if self.list:
+            for a in parse(line):
+                while True:
+                    try:
+                        i = int(input(f'Enter index to store data {a}: '))
+                        self.list.insert(a, i)
+                        break
+                    except ValueError:
+                        print("Could not convert data to an integer.")
+                        continue
+                    except IndexError:
+                        print("Index out of bounds in the list.")
+                        continue
+
+    def do_find(self, line):
+        """Find value(s) in Linked-List"""
+        if self.list:
+            for a in parse(line):
+                self.list.find(a)
+
+    def do_reverse(self, line):
+        """Reverse the current Linked-List"""
+        if self.list:
+            self.list.reverse()
+
+    def do_traverse(self, line):
+        """Traverse the current Linked-List"""
+        if self.list:
+            self.list.traverse()
+
+    def do_remove(self, line):
+        """Remove value(s) from Linked-List"""
+        if self.list:
+            for a in parse(line):
+                self.list.delete(a)
+
+    def postcmd(self, stop, line):
+        command, _, _ = self.parseline(line)
+        if command in ('append', 'prepend', 'insert', 'remove', 'find',
+                       'create_list', 'reverse'):
+            self.do_view_list(line)
+        return stop
+
+    def do_quit(self, line):
+        """Quit the program."""
+        return True  # this exits the Cmd application loop
+
+    def do_EOF(self, line):
+        return True
+
+
+def parse(arg):
+    """Convert a series of zero or more numbers to an argument tuple"""
+    return tuple(map(int, arg.split()))
 
 
 def main(argv=None):
-    while True:
-        if argv is None:
-            argv = sys.argv
-        lst = options()
-        while lst:
-            list_options(lst)
-        # n = get_list_size()
-        # for i in range(n):
-        #     prepend_data(lst)
-        #     print(f'List -> {lst}')
+    if argv is None:
+        argv = sys.argv
+    if len(argv) > 1:
+        LinkedListCMD().onecmd(' '.join(sys.argv[1:]))
+        print(' '.join(sys.argv[1:]))
+    else:
+        LinkedListCMD().cmdloop('Linked List Command Demo!\n'
+                                '=========================\n\n'
+                                '(Type "help" for commands.)')
 
 if __name__ == "__main__":
     main()
