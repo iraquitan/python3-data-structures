@@ -25,7 +25,7 @@ class DNode(Node):
         return repr((id(self.previous_), self.data, id(self.next_)))
 
 
-class LinkedList(object):
+class SinglyLinkedList(object):
     def __init__(self, data=None):
         """"""
         if data is not None:
@@ -43,15 +43,43 @@ class LinkedList(object):
                 current = current.next_
         return '[{nodes}]'.format(nodes=', '.join(nodes))
 
+    def print(self, p):
+        """Print the Linked-List using recursion."""
+        if p is None:
+            print('', flush=True)
+            return
+        print(p.data, end=' ')
+        self.print(p.next_)
+
+    def reverse_print(self, p):
+        """Print the Linked-List in reverse order using recursion."""
+        if p is None:
+            return
+        self.reverse_print(p.next_)
+        print(p.data, end=' ', flush=True)
+
+    def rec_reverse(self, current):
+        if current.next_ is None:
+            self.head = current
+            return
+        self.rec_reverse(current.next_)
+        # next_ = current.next_
+        # next_.next_ = current
+        # current.next_ = None
+        current.next_.next_ = current
+        current.next_ = None
+        del current
+
     def prepend(self, data):
-        """Special case of insert data with index equal to 0"""
+        """Special case of insert data with index equal to 0."""
         self.insert(data, 0)
 
     def append(self, data):
-        """Special case of insert data with index equal to -1"""
+        """Special case of insert data with index equal to -1."""
         self.insert(data, -1)
 
     def insert(self, data, index=-1):
+        """Insert data in index."""
         # If list is empty set head to new data node
         if self.head is None:
             self.head = Node(data)
@@ -71,6 +99,7 @@ class LinkedList(object):
         current.next_ = Node(data, current.next_)
 
     def delete(self, data):
+        """Remove first match of data"""
         current = self.head
         prev_ = None
         while current and current.data != data:
@@ -84,6 +113,7 @@ class LinkedList(object):
         return
 
     def find(self, data):
+        """Find data"""
         current = self.head
         while current:
             if current.data == data:
@@ -91,6 +121,7 @@ class LinkedList(object):
             current = current.next_
 
     def traverse(self):
+        """Traverse Linked-List"""
         nodes = []
         count = 0
         current = self.head
@@ -101,6 +132,7 @@ class LinkedList(object):
         print(f'traversed, found {count} items')
 
     def reverse(self):
+        """Reverse the Linked-List"""
         current = self.head
         prev_ = None
         next_ = None
@@ -112,10 +144,10 @@ class LinkedList(object):
         self.head = prev_
 
 
-class DoubleLinkedList(LinkedList):
+class DoublyLinkedList(SinglyLinkedList):
     def __init__(self, data=None):
         """"""
-        super(DoubleLinkedList, self).__init__(data)
+        super(DoublyLinkedList, self).__init__(data)
         if data is not None:
             self.head = DNode(data)
         else:
@@ -194,13 +226,13 @@ class LinkedListCMD(cmd.Cmd):
         opt = None
         while True and opt not in (1, 2):
             try:
-                opt = int(input("[1] Single or [2] Double Linked-List? "))
+                opt = int(input("[1] Singly or [2] Doubly Linked-List? "))
             except ValueError:
                 continue
         if opt == 1:
-            self.list = LinkedList()
+            self.list = SinglyLinkedList()
         else:
-            self.list = DoubleLinkedList()
+            self.list = DoublyLinkedList()
 
     def do_delete_list(self, line):
         """Deletes the current Linked-List"""
