@@ -94,7 +94,7 @@ class SinglyLinkedList(object):
                 break
             ix += 1
             current = current.next_
-        if index != -1:
+        if index != -1 and current.next_ is None:
             raise IndexError(f'"index" {index} out of bounds')
         current.next_ = Node(data, current.next_)
 
@@ -169,7 +169,7 @@ class DoublyLinkedList(SinglyLinkedList):
                 break
             ix += 1
             current = current.next_
-        if index != -1:
+        if index != -1 and current.next_ is None:
             raise IndexError(f'"index" {index} out of bounds')
         next_ = current.next_
         current.next_ = DNode(data, next_=next_, previous_=current)
