@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import abc
 import sys
 import cmd
+from abc import ABCMeta
 
 
 class Node(object):
@@ -25,13 +27,7 @@ class DNode(Node):
         return repr((id(self.previous_), self.data, id(self.next_)))
 
 
-class SinglyLinkedList(object):
-    def __init__(self, data=None):
-        """"""
-        if data is not None:
-            self.head = Node(data)
-        else:
-            self.head = None
+class BaseLinkedList(metaclass=ABCMeta):
 
     def __repr__(self):
         nodes = []
@@ -42,6 +38,57 @@ class SinglyLinkedList(object):
                 nodes.append(repr(current))
                 current = current.next_
         return '[{nodes}]'.format(nodes=', '.join(nodes))
+
+    def append(self, data):
+        """Insert data at tail of Linked-List."""
+        self.insert(data, -1)
+
+    def prepend(self, data):
+        """Insert data at head of Linked-List."""
+        self.insert(data, 0)
+
+    @abc.abstractmethod
+    def insert(self, data, index):
+        """Insert data at index of Linke-List."""
+        return
+
+    @abc.abstractmethod
+    def delete(self, data):
+        """Remove first occurrence of data in Linked-List."""
+        return
+
+    @abc.abstractmethod
+    def reverse(self):
+        """Reverse the Linked-List."""
+        return
+
+    def find(self, data):
+        """Find data in the Linked-List."""
+        current = self.head
+        while current:
+            if current.data == data:
+                return current.data
+            current = current.next_
+
+    def traverse(self):
+        """Traverse the Linked-List."""
+        nodes = []
+        count = 0
+        current = self.head
+        while current:
+            nodes.append(current.data)
+            current = current.next_
+            count += 1
+        print(f'traversed, found {count} items')
+
+
+class SinglyLinkedList(BaseLinkedList):
+    def __init__(self, data=None):
+        """"""
+        if data is not None:
+            self.head = Node(data)
+        else:
+            self.head = None
 
     def print(self, p):
         """Print the Linked-List using recursion."""
@@ -69,14 +116,6 @@ class SinglyLinkedList(object):
         current.next_.next_ = current
         current.next_ = None
         del current
-
-    def prepend(self, data):
-        """Special case of insert data with index equal to 0."""
-        self.insert(data, 0)
-
-    def append(self, data):
-        """Special case of insert data with index equal to -1."""
-        self.insert(data, -1)
 
     def insert(self, data, index=-1):
         """Insert data in index."""
@@ -112,25 +151,6 @@ class SinglyLinkedList(object):
             del current
         return
 
-    def find(self, data):
-        """Find data"""
-        current = self.head
-        while current:
-            if current.data == data:
-                return current.data
-            current = current.next_
-
-    def traverse(self):
-        """Traverse Linked-List"""
-        nodes = []
-        count = 0
-        current = self.head
-        while current:
-            nodes.append(current.data)
-            current = current.next_
-            count += 1
-        print(f'traversed, found {count} items')
-
     def reverse(self):
         """Reverse the Linked-List"""
         current = self.head
@@ -144,10 +164,9 @@ class SinglyLinkedList(object):
         self.head = prev_
 
 
-class DoublyLinkedList(SinglyLinkedList):
+class DoublyLinkedList(BaseLinkedList):
     def __init__(self, data=None):
         """"""
-        super(DoublyLinkedList, self).__init__(data)
         if data is not None:
             self.head = DNode(data)
         else:
@@ -158,9 +177,9 @@ class DoublyLinkedList(SinglyLinkedList):
             self.head = DNode(data)
             return
         if index == 0:
-            next_ = self.head
-            self.head = DNode(data, next_=self.head)
-            next_.previous_ = self.head
+            new_node = DNode(data, next_=self.head)
+            self.head.previous_ = new_node
+            self.head = new_node
             return
         ix = 0
         current = self.head
