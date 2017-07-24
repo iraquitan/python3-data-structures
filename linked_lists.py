@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
-import abc
-import sys
+"""
+Script to demonstrate Python implementation of Linked-Lists.
+"""
 import cmd
-from abc import ABCMeta
+import sys
+from abc import ABCMeta, abstractmethod
+from enum import Enum
 
 
 class Node(object):
+    """Singly linked-list node."""
     __slots__ = ('data', 'next_')
 
     def __init__(self, data=None, next_=None):
-        """"""
         self.data = data
         self.next_ = next_
 
@@ -17,17 +20,33 @@ class Node(object):
         return repr((self.data, id(self.next_)))
 
 
-class DNode(Node):
+class DoublyNode(Node):
+    """Doubly linked-list node."""
     def __init__(self, data=None, next_=None, previous_=None):
         """"""
-        super(DNode, self).__init__(data, next_)
+        super(DoublyNode, self).__init__(data, next_)
         self.previous_ = previous_
 
     def __repr__(self):
         return repr((id(self.previous_), self.data, id(self.next_)))
 
 
+class NodeType(Enum):
+    """Node type enumeration class."""
+    SINGLY = 1
+    DOUBLY = 2
+
+
 class BaseLinkedList(metaclass=ABCMeta):
+    """Abstract class defining a base linked-list."""
+    type_ = 0
+
+    def __init__(self, data=None):
+        """"""
+        if data is not None:
+            self.head = self.new_node(data=data)
+        else:
+            self.head = None
 
     def __repr__(self):
         nodes = []
@@ -39,31 +58,49 @@ class BaseLinkedList(metaclass=ABCMeta):
                 current = current.next_
         return '[{nodes}]'.format(nodes=', '.join(nodes))
 
+    def new_node(self, data):
+        """Return a new node depending of list node type."""
+        if self.type_ == NodeType.SINGLY:
+            return Node(data=data, next_=None)
+        elif self.type_ == NodeType.DOUBLY:
+            return DoublyNode(data=data, next_=None, previous_=None)
+
     def append(self, data):
-        """Insert data at tail of Linked-List."""
+        """Insert data at tail of linked-list. This operation takes O(n) time
+        to run, as we only have the pointer to the head of the list, we must
+        traverse the entire list to insert in the last index.
+        """
         self.insert(data, -1)
 
     def prepend(self, data):
-        """Insert data at head of Linked-List."""
+        """Insert data at head of linked-list. This operation takes O(1) time
+        to run, as we don't need to shift all the elements to the right as in
+        an array, we just need to add a node before head and update head.
+        """
         self.insert(data, 0)
 
-    @abc.abstractmethod
+    @abstractmethod
     def insert(self, data, index):
-        """Insert data at index of Linke-List."""
+        """Insert data at index of linked-list. This operation takes O(n) time
+        to run, as we must traverse to the index.
+        """
         return
 
-    @abc.abstractmethod
+    @abstractmethod
     def delete(self, data):
-        """Remove first occurrence of data in Linked-List."""
+        """Remove first occurrence of data in linked-list. This operation
+        takes O(n) time to run, as we must traverse until we find a match to
+        remove.
+        """
         return
 
-    @abc.abstractmethod
+    @abstractmethod
     def reverse(self):
-        """Reverse the Linked-List."""
+        """Reverse the linked-list."""
         return
 
     def find(self, data):
-        """Find data in the Linked-List."""
+        """Find data in the linked-list."""
         current = self.head
         while current:
             if current.data == data:
@@ -71,7 +108,7 @@ class BaseLinkedList(metaclass=ABCMeta):
             current = current.next_
 
     def traverse(self):
-        """Traverse the Linked-List."""
+        """Traverse the linked-list."""
         nodes = []
         count = 0
         current = self.head
@@ -83,29 +120,26 @@ class BaseLinkedList(metaclass=ABCMeta):
 
 
 class SinglyLinkedList(BaseLinkedList):
-    def __init__(self, data=None):
-        """"""
-        if data is not None:
-            self.head = Node(data)
-        else:
-            self.head = None
+    """Class defining a singly linked-list."""
+    type_ = NodeType.SINGLY
 
-    def print(self, p):
-        """Print the Linked-List using recursion."""
-        if p is None:
+    def print(self, node):
+        """Print the linked-list using recursion."""
+        if node is None:
             print('', flush=True)
             return
-        print(p.data, end=' ')
-        self.print(p.next_)
+        print(node.data, end=' ')
+        self.print(node.next_)
 
-    def reverse_print(self, p):
-        """Print the Linked-List in reverse order using recursion."""
-        if p is None:
+    def reverse_print(self, node):
+        """Print the linked-list in reverse order using recursion."""
+        if node is None:
             return
-        self.reverse_print(p.next_)
-        print(p.data, end=' ', flush=True)
+        self.reverse_print(node.next_)
+        print(node.data, end=' ', flush=True)
 
     def rec_reverse(self, current):
+        """Reverse linked-list using recursion."""
         if current.next_ is None:
             self.head = current
             return
@@ -118,27 +152,29 @@ class SinglyLinkedList(BaseLinkedList):
         del current
 
     def insert(self, data, index=-1):
-        """Insert data in index."""
         # If list is empty set head to new data node
         if self.head is None:
-            self.head = Node(data)
+            self.head = self.new_node(data)
             return
         if index == 0:
-            self.head = Node(data, next_=self.head)
+            new_node = self.new_node(data)
+            new_node.next_ = self.head
+            self.head = new_node
             return
-        ix = 0
+        idx = 0
         current = self.head
         while current.next_:
-            if ix == index - 1:
+            if idx == index - 1:
                 break
-            ix += 1
+            idx += 1
             current = current.next_
         if index != -1 and current.next_ is None:
             raise IndexError(f'"index" {index} out of bounds')
-        current.next_ = Node(data, current.next_)
+        new_node = self.new_node(data)
+        new_node.next_ = current.next_
+        current.next_ = new_node
 
     def delete(self, data):
-        """Remove first match of data"""
         current = self.head
         prev_ = None
         while current and current.data != data:
@@ -152,7 +188,6 @@ class SinglyLinkedList(BaseLinkedList):
         return
 
     def reverse(self):
-        """Reverse the Linked-List"""
         current = self.head
         prev_ = None
         next_ = None
@@ -165,33 +200,33 @@ class SinglyLinkedList(BaseLinkedList):
 
 
 class DoublyLinkedList(BaseLinkedList):
-    def __init__(self, data=None):
-        """"""
-        if data is not None:
-            self.head = DNode(data)
-        else:
-            self.head = None
+    """Class defining a doubly linked-list."""
+    type_ = NodeType.DOUBLY
 
     def insert(self, data, index=-1):
         if self.head is None:
-            self.head = DNode(data)
+            self.head = self.new_node(data)
             return
         if index == 0:
-            new_node = DNode(data, next_=self.head)
+            new_node = self.new_node(data)
+            new_node.next_ = self.head
             self.head.previous_ = new_node
             self.head = new_node
             return
-        ix = 0
+        idx = 0
         current = self.head
         while current.next_:
-            if ix == index - 1:
+            if idx == index - 1:
                 break
-            ix += 1
+            idx += 1
             current = current.next_
         if index != -1 and current.next_ is None:
             raise IndexError(f'"index" {index} out of bounds')
         next_ = current.next_
-        current.next_ = DNode(data, next_=next_, previous_=current)
+        new_node = self.new_node(data)
+        new_node.next_ = next_
+        new_node.previous_ = current
+        current.next_ = new_node
         if next_:
             next_.previous_ = current.next_
 
@@ -203,7 +238,8 @@ class DoublyLinkedList(BaseLinkedList):
             current = current.next_
         if prev_ is None and current is not None:
             self.head = current.next_
-            self.head.previous_ = None
+            if self.head:
+                self.head.previous_ = None
         elif current:
             next_ = current.next_
             prev_.next_ = next_
@@ -224,6 +260,7 @@ class DoublyLinkedList(BaseLinkedList):
 
 
 class LinkedListCMD(cmd.Cmd):
+    """Command line interface for using linked-lists."""
     prompt = '\n(linked-list)> '
 
     def __init__(self, ):
@@ -233,7 +270,7 @@ class LinkedListCMD(cmd.Cmd):
 
     # The default() method is called when none of the other do_*() command
     # methods match.
-    def default(self, arg):
+    def default(self, line):
         self.stdout.write('I do not understand that command. '
                           'Type "help" for a list of commands.')
 
@@ -268,23 +305,23 @@ class LinkedListCMD(cmd.Cmd):
     def do_append(self, line):
         """Append value(s) to Linked-List"""
         if self.list:
-            for a in parse(line):
-                self.list.append(a)
+            for data in parse(line):
+                self.list.append(data)
 
     def do_prepend(self, line):
         """Prepend value(s) to Linked-List"""
         if self.list:
-            for a in parse(line):
-                self.list.prepend(a)
+            for data in parse(line):
+                self.list.prepend(data)
 
     def do_insert(self, line):
         """Insert value(s) to Linked-List"""
         if self.list:
-            for a in parse(line):
+            for data in parse(line):
                 while True:
                     try:
-                        i = int(input(f'Enter index to store data {a}: '))
-                        self.list.insert(a, i)
+                        i = int(input(f'Enter index to store data {data}: '))
+                        self.list.insert(data, i)
                         break
                     except ValueError:
                         print("Could not convert data to an integer.")
@@ -296,8 +333,11 @@ class LinkedListCMD(cmd.Cmd):
     def do_find(self, line):
         """Find value(s) in Linked-List"""
         if self.list:
-            for a in parse(line):
-                self.list.find(a)
+            for data in parse(line):
+                if self.list.find(data):
+                    print(f"Found {data}.")
+                else:
+                    print(f"Not found.")
 
     def do_reverse(self, line):
         """Reverse the current Linked-List"""
@@ -312,8 +352,8 @@ class LinkedListCMD(cmd.Cmd):
     def do_remove(self, line):
         """Remove value(s) from Linked-List"""
         if self.list:
-            for a in parse(line):
-                self.list.delete(a)
+            for data in parse(line):
+                self.list.delete(data)
 
     def postcmd(self, stop, line):
         command, _, _ = self.parseline(line)
