@@ -96,11 +96,15 @@ class BaseLinkedList(metaclass=ABCMeta):
 
     @abstractmethod
     def reverse(self):
-        """Reverse the linked-list."""
+        """Reverse the linked-list in-place. This operation takes O(n) time to
+        run, as we must traverse all the elements to change their links.
+        """
         return
 
     def find(self, data):
-        """Find data in the linked-list."""
+        """Find data in the linked-list. This operation takes O(n) time to
+        run, as we must traverse until we find a match.
+        """
         current = self.head
         while current:
             if current.data == data:
